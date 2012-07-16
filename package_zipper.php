@@ -1,63 +1,40 @@
 <?php
 /* TODO:
-  - Add a init constructor that breaks up the create_zip method into a better set of logic
-    and add files on the fly instead of adding them to the zip file via an array.
+  - Add ability to inject files into the zip at a specific folder
+  - Ability to clone an existing directory from the current location
+  - Ability to replace an existing file already in the zip
 */
 
 class Zip_Pack {
     var $temp_loc = null; // Location of system's temporary directory
     var $zip = null; // Zip interface object http://www.php.net/manual/en/class.ziparchive.php
-    var $zip_file_name = 'game'; // Name of the final zip file output.
-    var $zip_files = array(); // Array of zip files that need to be added to the zip package
+    var $zip_package = null; // The complete zip package
 
-    // Creates a zip file from added files, folders, and other data
-    function create_zip() {
+	function __construct() {
         // Zip interface object http://www.php.net/manual/en/class.ziparchive.php
         $this->zip = new ZipArchive();
 
         // Create a zip file with a temporary name
-        $zip_package = tempnam($this->get_temp_dir(), 'zip_package');
+        $this->zip_package = tempnam($this->get_temp_dir(), 'zip_package');
 
-        // Create an empty zip file to store the data
-        $this->zip->open($zip_package, ZipArchive::CREATE);
+        // Create an empty zip file to store the data and open the interface
+        $this->zip->open($this->zip_package, ZipArchive::CREATE);
+	}
 
-        // Inject each new file into the archive
-        foreach ($this->zip_files as $zip_file):
-            // Note: Can this be added in a specific folder?
-            $this->zip->addFile($zip_file['data'], $zip_file['name']);
-        endforeach;
-
+    function output_zip($name) {
         // Close the zip interface
         $this->zip->close();
 
-        $this->output_zip($zip_package);
-
-        // Example
-        //$zip_file = tempnam($temp_loc, 'zip');
-        //$zip = new ZipArchive();
-        //$zip->open($zip_file, ZipArchive::CREATE);
-        //$zip->addFile($test_file, 'test.js');
-        //$zip->close();
-    }
-
-    function output_zip($file) {
         // Retrieve file size so the browser knows the length of the download
-        $file_size = filesize($file);
+        $file_size = filesize($this->zip_package);
 
         // Output proper header data to force a download instead of going to a new page
         header('Content-Type: application/zip');
         header('Content-Length: ' . $file_size);
-        header('Content-Disposition: attachment; filename="' . $this->zip_file_name . '.zip"');
+        header('Content-Disposition: attachment; filename="' . $name . '.zip"');
 
         // Send the user a downloadable file
-        readfile($file);
-
-        // Example
-        //$file_size = filesize($zip_file);
-        //header('Content-Type: application/zip');
-        //header('Content-Length: ' . $file_size);
-        //header('Content-Disposition: attachment; filename="file.zip"');
-        //readfile($zip_file);
+        readfile($this->zip_package);
     }
 
     // Creates a new file inside a zip file
@@ -70,21 +47,8 @@ class Zip_Pack {
         fwrite($file_writer, $content);
         fclose($file_writer);
 
-        // Save file data for inclusion into
-        $file_data = array(
-            'name' => $name,
-            'loc' => $loc,
-            'data' => $file
-        );
-        array_push($this->zip_files, $file_data);
-
-        //// Create a temporary file reference
-        //$test_file = tempnam('', "FOO");
-        //
-        //// Generate a simple read and write utility in binary
-        //$file_writer = fopen($test_file, "w"); // Opens the file with a write utility
-        //fwrite($file_writer, "writing to tempfile");
-        //fclose($file_writer);
+        // Save file data for inclusion
+		$this->zip->addFile($file, $name);
     }
 
     // Finds and replaces the given file inside a zip folder
