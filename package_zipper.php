@@ -1,4 +1,8 @@
 <?php
+/* TODO:
+  - Add a init constructor that breaks up the create_zip method into a better set of logic
+    and add files on the fly instead of adding them to the zip file via an array.
+
 class Zip_Pack {
     var $temp_loc = null; // Location of system's temporary directory
     var $zip = null; // Zip interface object http://www.php.net/manual/en/class.ziparchive.php
