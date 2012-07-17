@@ -1,8 +1,7 @@
 <?php
 /* TODO:
-  - Add ability to inject files into the zip at a specific folder
+  - Add new folders
   - Ability to clone an existing directory from the current location
-  - Ability to replace an existing file already in the zip
 */
 
 class Zip_Pack {
@@ -11,6 +10,8 @@ class Zip_Pack {
     var $zip_package = null; // The complete zip package
 
 	function __construct() {
+		$this->zip_extension_exists();
+
         // Zip interface object http://www.php.net/manual/en/class.ziparchive.php
         $this->zip = new ZipArchive();
 
@@ -19,6 +20,17 @@ class Zip_Pack {
 
         // Create an empty zip file to store the data and open the interface
         $this->zip->open($this->zip_package, ZipArchive::CREATE);
+	}
+
+	// Test and error handling for zip extension support in the current running
+	// server.
+	function zip_extension_exists() {
+		if (!extension_loaded('zip')) {
+			$error_message = 'Package Zipper requires the PHP Zip extension to be enabled. For information on enabling it please see the official PHP Zip extenstion installation docs at http://www.php.net/manual/en/zip.setup.php';
+			throw new Exception($error_message);
+		} else {
+			return true;
+		}
 	}
 
     function output_zip($name) {
@@ -37,10 +49,13 @@ class Zip_Pack {
         readfile($this->zip_package);
     }
 
-    // Creates a new file inside a zip file
-    function create_file($name, $content, $loc = '') {
+    /**
+	 * Creates a new file inside the current zip archive. If you supply an existing
+	 * file name and location, the existing file will be overwritten.
+	 */
+    function set_file($name, $content, $loc = '') {
         // Create temporary file
-        $file = tempnam($this->get_temp_dir(), $name);
+        $file = tempnam($this->get_temp_dir(), $name . $loc);
 
         // Generate a simple read and write utility in binary
         $file_writer = fopen($file, "w"); // Opens the file with a write utility
@@ -51,13 +66,14 @@ class Zip_Pack {
 		$this->zip->addFile($file, $name);
     }
 
-    // Finds and replaces the given file inside a zip folder
-    function replace_file($name, $content) {
+	// Set or override an existing folder
+	function set_folder($name, $loc = '') {
 
-    }
+	}
 
     // Clones a directory into the zip file
-    function clone_dir($start_loc) {
+	// http://stackoverflow.com/questions/1334613/how-to-recursively-zip-a-directory-in-php
+    function clone_dir($loc) {
 
     }
 
