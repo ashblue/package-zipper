@@ -1,10 +1,50 @@
 <?php
+/**
+ * PHP Package Zipper
+ *
+ * PHP Version 5
+ *
+ * @author    Ash Blue <ash@blueashes.com>
+ * @copyright 2012 Ash Blue / Blue Ashes (http://blueashes.com)
+ * @package   PackageZipper
+ * @license   http://www.opensource.org/licenses/mit-license.php MIT
+ * @link      https://github.com/ashblue/package-zipper
+ * @version   1
+ */
+
 /* TODO:
   - Simple documentation with PHP docs http://www.phpdoc.org/
   - Setup demo files
 */
 
+
+/**
+ * Extendable class for creating your own custom zip files on the fly with PHP.
+ *
+ * To have a page return a zip file to download instead of loading up the content
+ * simply do the following:
+ *
+ * $zip_pack = new Zip_Pack;
+ * $zip_pack
+ *      ->set_file('blah/foo.txt', 'foo bar')
+ *      ->set_file('blah/bar.txt', 'foo bar')
+ *
+ * @package    PackageZipper
+ * @subpackage Documentation
+ *
+ * You can also return the zip file and work with it further by not providing a
+ * name for the zip file:
+ *
+ * code example
+ *
+ * Need more functionality for your project? You can easily extend Package Zipper
+ * by doing the following:
+ */
 class Zip_Pack {
+    /**
+     *
+     *
+     */
     private static $error_message = 'Package Zipper requires the PHP Zip extension to be enabled. For information on enabling it please see the official PHP Zip extenstion installation docs at http://www.php.net/manual/en/zip.setup.php';
     public $temp_loc = null; // Location of system's temporary directory
     public $zip = null; // Zip interface object http://www.php.net/manual/en/class.ziparchive.php
