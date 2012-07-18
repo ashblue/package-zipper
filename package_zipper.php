@@ -21,16 +21,16 @@
 /**
  * Extendable class for creating your own custom zip files on the fly with PHP.
  *
- * To have a page return a zip file to download instead of loading up the content
- * simply do the following:
+ * To have a page return a zip file to download simply do the following:
  *
  * $zip_pack = new Zip_Pack;
- * $zip_pack
- *      ->set_file('blah/foo.txt', 'foo bar')
- *      ->set_file('blah/bar.txt', 'foo bar')
  *
- * @package    PackageZipper
- * @subpackage Documentation
+ * $zip_pack
+ *      ->clone_dir('directory_name')
+ *      ->set_file('directory_name/file.txt', 'foo bar')
+ *      ->get_zip('zip_package');
+ *
+ *
  *
  * You can also return the zip file and work with it further by not providing a
  * name for the zip file:
@@ -39,11 +39,17 @@
  *
  * Need more functionality for your project? You can easily extend Package Zipper
  * by doing the following:
+ *
+ * code example
+ *
+ * @package    PackageZipper
+ * @subpackage Documentation
  */
 class Zip_Pack {
     /**
-     *
-     *
+     * Error message displayed if the zip extension isn't enabled.
+     * @ignore
+     * @param String
      */
     private static $error_message = 'Package Zipper requires the PHP Zip extension to be enabled. For information on enabling it please see the official PHP Zip extenstion installation docs at http://www.php.net/manual/en/zip.setup.php';
     public $temp_loc = null; // Location of system's temporary directory
