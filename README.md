@@ -28,7 +28,7 @@ your zip class file, construct it, and start making zip files.
     // Create a new zip pack
     $zip_pack = new Zip_Pack;
 
-    // Create a file called foo.txt from a string and output it as zip_package.zip
+    // Clone a directory and output it as zip_package.zip
     $zip_pack
         ->clone_dir('directory_name')
         ->get_zip('zip_package');
