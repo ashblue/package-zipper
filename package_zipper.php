@@ -12,11 +12,13 @@
  * functionality, you can easily exted the class.
  *
  * Usage instructions:
+ *
  * 1. Include the package_zipper.php file in your page: include('package_zipper.php');
  * 2. Create a new instance of the Package Zipper class: $zip_pack = new Zip_Pack;
  * 3. Make your zip file and output it: $zip_pack->set_file('foo.txt', 'foo bar')->get_zip('zip_package');
  *
  * What it looks like when its all put together:
+ *
  * // Include package zipper from a relative URL
  * include('package_zipper.php');
  *
@@ -28,13 +30,20 @@
  *      ->clone_dir('directory_name')
  *      ->get_zip('zip_package');
  *
+ * Want to add more functionality to Package Zipper? Just extend the existing class
+ * as so.
+ *
+ * CODE EXAMPLE HERE
+ *
  * @author    Ash Blue <ash@blueashes.com>
  * @copyright 2012 Ash Blue / Blue Ashes (http://blueashes.com)
  * @package   PackageZipper
  * @license   http://www.opensource.org/licenses/mit-license.php MIT
  * @link      https://github.com/ashblue/package-zipper
  * @version   1
- * @todo      Setup demo files
+ * @todo      Setup simple demo files
+ * @todo      Complete existing todos
+ * @todo      Test code samples and review docs
  */
 
 /**
@@ -65,10 +74,9 @@
  * @method self set_file(string $name, string $content)
  * @method self set_folder(string $name)
  * @method self delete_name(string $name)
- * @method self clone_dir(string $name, bool $include_parent_folder)
+ * @method self clone_dir(string $name, boolean $include_parent_folder)
  * @method self create_zip()
  * @method string|object get_zip([string] $name)
-
  */
 class Zip_Pack {
     /**
@@ -129,7 +137,7 @@ class Zip_Pack {
      * @api
      * @type string String that needs to be cleaned.
      * @type string Text to remove from the $string.
-     * @type [bool] Only fires if active is set to true.
+     * @type [boolean] Only fires if active is set to true.
      * @return string Will return the new string upon successa and the original
      * string upon failure.
      */
@@ -226,8 +234,33 @@ class Zip_Pack {
     }
 
     /**
-     * Creates a new file inside the current zip archive. If you supply an existing
-     * file name and location, the existing file will be overwritten.
+     * Creates a new file inside your zip package from a string. If you supply
+     * an existing file name and location, the file will be overwritten.
+     *
+     * To create a new file from a string, add a file name and a string. Package
+     * Zipper will take care of all the details for you.
+     *
+     * $zip_pack = new Zip_Pack;
+     * $zip_pack->set_file('foo.txt', 'bar');
+     *
+     * You can overwite an existing file by setting a $name that already exists.
+     *
+     * $zip_pack = new Zip_Pack;
+     * $zip_pack
+     *     ->set_file('foo.txt', 'bar')
+     *     ->set_file('foo.txt', 'replaced content');
+     *
+     * You can also create zip files in a new non-existent directory without
+     * calling $this->set_folder. The ZipArchive extension is smart enough to
+     * automatically add non-existent folders for you.
+     *
+     * $zip_pack = new Zip_Pack;
+     * $zip_pack->set_file('blah/blah/foo.txt', 'bar');
+     *
+     * @type string File location and name of the file. Should include a file type
+     * such as "foo.txt"
+     * @type string Content to include inside the added file.
+     * @return self
      */
     public function set_file($name, $content) {
         // Create temporary file
@@ -244,23 +277,80 @@ class Zip_Pack {
         return $this;
     }
 
-    // Set or override an existing folder
+    /*
+     * Allows you to set a folder inside you zip package. Will automatically
+     * create non-existent folders for you just like the set_file method. Note
+     * that this should only be used to create empty folders, as the
+     * set_file($name, $content) method will automatically create parent folders
+     * for you when creating new files.
+     *
+     * $zip_pack = new Zip_Pack;
+     * $zip_pack->set_folder('blah/blah/blah');
+     *
+     * @type string Should be a series of folders such as "blah/blah/blah" or a
+     * single folder "blah".
+     * @return self
+     */
     public function set_folder($name) {
         $this->zip->addEmptyDir($name);
 
         return $this;
     }
 
-    // Delete an existing file or folder
-    // NOTE: All folder paths must end with a "/", for example to delete a folder called
-    // foo, you must pass 'foo/' as $loc
+    /*
+     * Gives you the ability to delete an existing file or folder. Make sure
+     * when deleting a folder that you include a "/" or it will not work. As the
+     * ZipArchive API doesn't know you want to delete a folder without it. This method
+     * does not recursively delete, so you'll need to call the create_zip() method
+     * if you want to completely erase the current zip package's contents.
+     *
+     * To delete a file call the delete_name($name) method as normal.
+     *
+     * $zip_pack = new Zip_Pack;
+     * $zip_pack
+     *     ->set_file('foo.txt', 'bar')
+     *     ->delete_name('foo.txt');
+     *
+     * Make sure that you include a "/" when deleting folders.
+     *
+     * $zip_pack = new Zip_Pack;
+     * $zip_pack
+     *     ->set_folder('foo')
+     *     ->delete_name('foo/');
+     *
+     * @type string Location and folder/file name of what you want to delete.
+     * @return self
+     */
     public function delete_name($name) {
         $this->zip->deleteName($name);
 
         return $this;
     }
 
-    // Clones a directory into the zip file
+    /*
+     * Clones a folder and all of its content or individual files into your zip
+     * package. For folders it will recursively add all child content without
+     * caring what the file is, so be careful when cloning folders.
+     *
+     * Cloning a directory is very simple.
+     *
+     * CODE EXAMPLE
+     *
+     * You can also add existing individual files as so and specify a specific
+     * destination to place them in your zip package.
+     *
+     * CODE EXAMPLE
+     *
+     * @todo Verify that this will also clone individual files if specified.
+     * @todo clone_dir is not very reflective of the ability to clone directories and files.
+     * @todo needs a destination parameter in-case the user doesn't want to dump
+     * the same files and/or folders in the same place.
+     *
+     * @type string Name of the file or folder to clone into the zip package.
+     * @type boolean Include the parent folder when cloning a directory? If false,
+     * the folder passed in $name such as "blah" will not added to your zip package,
+     * but all of the contents will still be added in their current structure.
+     */
     public function clone_dir($name, $include_parent_folder = true) {
         $catalog = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($name), RecursiveIteratorIterator::SELF_FIRST);
 
