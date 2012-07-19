@@ -33,7 +33,7 @@ your zip class file, construct it, and start making zip files.
         ->clone_dir('directory_name')
         ->get_zip('zip_package');
 
-### Supported Methods
+## Supported Methods
 
 Below are the following methods currently supported by PHP Package Zipper. For
 documentation on using these methods, please see the package_zipper.php file.
@@ -45,6 +45,6 @@ documentation on using these methods, please see the package_zipper.php file.
 * create_zip()
 * get_zip([string] $name)
 
-### Adding Functionality
+## Adding Functionality
 
 CODE EXAMPLE HERE
