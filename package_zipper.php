@@ -50,26 +50,6 @@
  * Base extendable class for creating your PHP zip file packages with Package
  * Zipper.
  *
- * To have a page return a zip file to download simply do the following:
- *
- * // Include
- *
- *
- * You can also return the zip file and work with it further by not providing a
- * name for the zip file:
- *
- * $zip_pack = new Zip_Pack;
- *
- * $zip_pack
- *      ->clone_dir('directory_name')
- *      ->set_file('directory_name/file.txt', 'foo bar')
- *      ->get_zip('zip_package');
- *
- * Need more functionality for your project? You can easily extend Package Zipper
- * by doing the following:
- *
- * code example
- *
  * @package PackageZipper
  * @method self set_file(string $name, string $content)
  * @method self set_folder(string $name)
@@ -366,6 +346,43 @@ class Zip_Pack {
                 $this->zip->addFromString($output, file_get_contents($item));
             endif;
         endforeach;
+
+        return $this;
+    }
+
+    /**
+     * @todo Move over clone_dir method docs and finish them
+     * @todo Test that it works
+     * @todo Convert "\" to "/"
+     * @todo Integrate destinations into method
+     */
+    public function clone_data($name, $dest = null) {
+        if (is_file($name)):
+            // If there is a destination, set $loc to it, otherwise $loc is equal
+            // to the $name
+            // Code var stuff here
+
+            $this->zip->addFromString($dest . $name, file_get_contents($name));
+
+        // Assumed passed $name is a directory
+        else:
+            $catalog = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($name), RecursiveIteratorIterator::SELF_FIRST);
+
+            // Look through all files retrieved
+            foreach ($catalog as $item):
+                // Clean and prep the recursive file data
+                $output = $this->clean_string($item, $name, $include_parent_folder);
+
+                // Replace "\" with "/" before processing anything
+
+                // Include directory data based upon file or directory discovery
+                if (is_dir($item) === true):
+                    $this->zip->addEmptyDir($output);
+                elseif (is_file($item) === true):
+                    $this->zip->addFromString($output, file_get_contents($item));
+                endif;
+            endforeach;
+        endif;
 
         return $this;
     }
