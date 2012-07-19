@@ -145,7 +145,7 @@ class Zip_Pack {
         return $active ? $string : str_replace($removed_string . '\\', '', $string);
     }
 
-    /*
+    /**
      * Retrieves the current system's temporary directory. If the value has been
      * retrieved before, it will return a cached value instead from $this->temp_loc
      * @api
@@ -155,7 +155,7 @@ class Zip_Pack {
         return ($this->temp_loc !== null) ? $this->temp_loc : $this->temp_loc = sys_get_temp_dir();
     }
 
-    /*
+    /**
      * Creates a new temporary zip file and stores the location in $this->zip_package
      * for later retieval. Also opens the ZipArchive interface for the just opened
      * zip file.
@@ -185,7 +185,7 @@ class Zip_Pack {
         return $this;
     }
 
-    /*
+    /**
      * Gets the zip file and returns it as a string for the zip file's location
      * or outputs the zip file on the page by changing the page's header elements.
      *
@@ -277,7 +277,7 @@ class Zip_Pack {
         return $this;
     }
 
-    /*
+    /**
      * Allows you to set a folder inside you zip package. Will automatically
      * create non-existent folders for you just like the set_file method. Note
      * that this should only be used to create empty folders, as the
@@ -297,7 +297,7 @@ class Zip_Pack {
         return $this;
     }
 
-    /*
+    /**
      * Gives you the ability to delete an existing file or folder. Make sure
      * when deleting a folder that you include a "/" or it will not work. As the
      * ZipArchive API doesn't know you want to delete a folder without it. This method
@@ -327,7 +327,7 @@ class Zip_Pack {
         return $this;
     }
 
-    /*
+    /**
      * Clones a folder and all of its content or individual files into your zip
      * package. For folders it will recursively add all child content without
      * caring what the file is, so be careful when cloning folders.
