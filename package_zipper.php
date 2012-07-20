@@ -42,7 +42,6 @@
  * @link      https://github.com/ashblue/package-zipper
  * @version   1
  * @todo      Setup simple demo files
- * @todo      Complete existing todos
  * @todo      Test code samples and review docs
  */
 
@@ -308,74 +307,50 @@ class Zip_Pack {
     }
 
     /**
-     * Clones a folder and all of its content or individual files into your zip
-     * package. For folders it will recursively add all child content without
+     * Clones a folder and all of its content or an individual file into your zip
+     * package. You may also specify an optional $destination to place the cloned
+     * files. For folders it will recursively add all child content without
      * caring what the file is, so be careful when cloning folders.
      *
-     * Cloning a directory is very simple.
+     * Cloning a directory and all of its sub-directories and files is very simple.
      *
-     * CODE EXAMPLE
+     * $zip_pack = new Zip_Pack;
+     * $zip_pack
+     *     ->clone_data('foo');
      *
-     * You can also add existing individual files as so and specify a specific
+     * You can also add existing individual files and optionally specify a specific
      * destination to place them in your zip package.
      *
-     * CODE EXAMPLE
-     *
-     * @todo Verify that this will also clone individual files if specified.
-     * @todo clone_dir is not very reflective of the ability to clone directories and files.
-     * @todo needs a destination parameter in-case the user doesn't want to dump
-     * the same files and/or folders in the same place.
+     * $zip_pack = new Zip_Pack;
+     * $zip_pack
+     *     ->clone_data('bar.txt', 'new_file_name.txt');
      *
      * @type string Name of the file or folder to clone into the zip package.
-     * @type boolean Include the parent folder when cloning a directory? If false,
-     * the folder passed in $name such as "blah" will not added to your zip package,
-     * but all of the contents will still be added in their current structure.
+     * @type [string] Include a specific destination to place the cloned data inside
+     * your zip package. Make sure that if you clone a file such as text.txt, that
+     * the new destination still has an extension such as 'new_dir/new_file.txt'.
+     * @return self
      */
-    public function clone_dir($name, $include_parent_folder = true) {
-        $catalog = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($name), RecursiveIteratorIterator::SELF_FIRST);
+    public function clone_data($name, $destination = null) {
+        // If there is a destination, set $loc to it, otherwise $loc is equal to the $name
+        $loc = $destination ? $destination : $name;
 
-        // Look through all files retrieved
-        foreach ($catalog as $item):
-            // Clean and prep the recursive file data
-            $output = $this->clean_string($item, $name, $include_parent_folder);
-
-            // Include directory data based upon file or directory discovery
-            if (is_dir($item) === true):
-                $this->zip->addEmptyDir($output);
-            elseif (is_file($item) === true):
-                $this->zip->addFromString($output, file_get_contents($item));
-            endif;
-        endforeach;
-
-        return $this;
-    }
-
-    /**
-     * @todo Move over clone_dir method docs and finish them
-     * @todo Test that it works
-     * @todo Convert "\" to "/"
-     * @todo Integrate destinations into method
-     */
-    public function clone_data($name, $dest = null) {
         if (is_file($name)):
-            // If there is a destination, set $loc to it, otherwise $loc is equal
-            // to the $name
-            // Code var stuff here
-
-            $this->zip->addFromString($dest . $name, file_get_contents($name));
+            $this->zip->addFromString($loc, file_get_contents($name));
 
         // Assumed passed $name is a directory
-        else:
+        elseif (is_dir($name)):
             $catalog = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($name), RecursiveIteratorIterator::SELF_FIRST);
 
             // Look through all files retrieved
             foreach ($catalog as $item):
-                // Clean and prep the recursive file data
-                $output = $this->clean_string($item, $name, $include_parent_folder);
+                // Remove the root
+                $output = preg_replace('/' . $name . '/', '', $item, 1);
 
-                // Replace "\" with "/" before processing anything
+                // Replace "\" with "/" before processing anything to prevent an error
+                $output = $loc . str_replace('\\', '/', $output);
 
-                // Include directory data based upon file or directory discovery
+                // Include data based upon file or directory discovery
                 if (is_dir($item) === true):
                     $this->zip->addEmptyDir($output);
                 elseif (is_file($item) === true):
