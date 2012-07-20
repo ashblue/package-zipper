@@ -2,47 +2,16 @@
 /**
  * PHP Package Zipper
  *
- * Requires:
- * - PHP Version X
- * - PHP Zip Extension, usually enabled by default (http://www.php.net/manual/en/zip.setup.php)
- *
- * Package Zipper is an extendable class for creating your own custom
- * zip files on the fly with PHP. It uses a couple simple methods that
- * give you a large amount of flexibility. If you don't like the provided
- * functionality, you can easily exted the class.
- *
- * Usage instructions:
- *
- * 1. Include the package_zipper.php file in your page: include('package_zipper.php');
- * 2. Create a new instance of the Package Zipper class: $zip_pack = new Zip_Pack;
- * 3. Make your zip file and output it: $zip_pack->set_file('foo.txt', 'foo bar')->get_zip('zip_package');
- *
- * What it looks like when its all put together:
- *
- * // Include package zipper from a relative URL
- * include('package_zipper.php');
- *
- * // Create a new zip pack
- * $zip_pack = new Zip_Pack;
- *
- * // Create a file called foo.txt from a string and output it as zip_package.zip
- * $zip_pack
- *      ->clone_dir('directory_name')
- *      ->get_zip('zip_package');
- *
- * Want to add more functionality to Package Zipper? Just extend the existing class
- * as so.
- *
- * CODE EXAMPLE HERE
- *
  * @author    Ash Blue <ash@blueashes.com>
- * @copyright 2012 Ash Blue / Blue Ashes (http://blueashes.com)
+ * @copyright 2012 Ashton Blue / Blue Ashes (http://blueashes.com)
  * @package   PackageZipper
  * @license   http://www.opensource.org/licenses/mit-license.php MIT
  * @link      https://github.com/ashblue/package-zipper
  * @version   1
- * @todo      Setup simple demo files
- * @todo      Test code samples and review docs
+ * @todo      Better method for recursive deleting folder contents
+ * @todo      New replace_name() method that runs delete_name() and then set_file()
+ * @todo      Combine set_file() and set_folder() into set_name()
+ * @todo      Introduction index.html file
  */
 
 /**
@@ -52,10 +21,10 @@
  * @package PackageZipper
  * @method self set_file(string $name, string $content)
  * @method self set_folder(string $name)
- * @method self delete_name(string $name)
- * @method self clone_dir(string $name, boolean $include_parent_folder)
+ * @method self delete_name(string|array $name)
+ * @method self clone_name(string $name, string $destination)
  * @method self create_zip()
- * @method string|object get_zip([string] $name)
+ * @method string|object get_zip(string [$name])
  */
 class Zip_Pack {
     /**
@@ -112,19 +81,6 @@ class Zip_Pack {
     }
 
     /**
-     * Cleans and returns a string if $active is set to true.
-     * @api
-     * @type string String that needs to be cleaned.
-     * @type string Text to remove from the $string.
-     * @type [boolean] Only fires if active is set to true.
-     * @return string Will return the new string upon successa and the original
-     * string upon failure.
-     */
-    private static function clean_string($string, $removed_string, $active = true) {
-        return $active ? $string : str_replace($removed_string . '\\', '', $string);
-    }
-
-    /**
      * Retrieves the current system's temporary directory. If the value has been
      * retrieved before, it will return a cached value instead from $this->temp_loc
      * @api
@@ -140,7 +96,7 @@ class Zip_Pack {
      * zip file.
      *
      * While create_zip is automatically run for you at initialization, you can
-     * also you it to overwrite the existing zip and start another.
+     * also use it to overwrite the existing zip and start another.
      *
      * $zip_pack = new Zip_Pack;
      *
@@ -166,18 +122,18 @@ class Zip_Pack {
 
     /**
      * Gets the zip file and returns it as a string for the zip file's location
-     * or outputs the zip file on the page by changing the page's header elements.
+     * or outputs the zip file on the page by changing the page's header data.
      *
-     * To return the zip file's location:
+     * To return the zip file's location.
      *
      * $zip_pack = new Zip_Pack;
      *
-     * // Creates a zip file, then overwrites it and only output a file called new.txt.
+     * // Returns the location of the created zip file as a string.
      * $zip_pack
      *      ->set_file('foo.txt', 'bar')
      *      ->get_zip();
      *
-     * Return the zip file as a download on the page:
+     * Return the zip file as a download on the page.
      *
      * $zip_pack = new Zip_Pack;
      *
@@ -215,9 +171,6 @@ class Zip_Pack {
     /**
      * Creates a new file inside your zip package from a string. If you supply
      * an existing file name and location, the file will be overwritten.
-     *
-     * To create a new file from a string, add a file name and a string. Package
-     * Zipper will take care of all the details for you.
      *
      * $zip_pack = new Zip_Pack;
      * $zip_pack->set_file('foo.txt', 'bar');
@@ -280,8 +233,10 @@ class Zip_Pack {
      * Gives you the ability to delete an existing file or folder. Make sure
      * when deleting a folder that you include a "/" or it will not work. As the
      * ZipArchive API doesn't know you want to delete a folder without it. This method
-     * does not recursively delete, so you'll need to call the create_zip() method
-     * if you want to completely erase the current zip package's contents.
+     * does not recursively delete and cannot delete folders with content, so
+     * you'll need to call the create_zip() if you want to completely
+     * erase the current zip package's contents. Using an array you can selectively
+     * delete a folders contents until you can actually delete the folder itself.
      *
      * To delete a file call the delete_name($name) method as normal.
      *
@@ -297,11 +252,17 @@ class Zip_Pack {
      *     ->set_folder('foo')
      *     ->delete_name('foo/');
      *
-     * @type string Location and folder/file name of what you want to delete.
+     * @type string|array Location and folder/file name of what you want to delete.
      * @return self
      */
     public function delete_name($name) {
-        $this->zip->deleteName($name);
+        if (gettype($name) === 'array'):
+            foreach ($name as $data) {
+                $this->zip->deleteName($data);
+            }
+        elseif (gettype($name) === 'string'):
+            $this->zip->deleteName($name);
+        endif;
 
         return $this;
     }
@@ -312,18 +273,18 @@ class Zip_Pack {
      * files. For folders it will recursively add all child content without
      * caring what the file is, so be careful when cloning folders.
      *
-     * Cloning a directory and all of its sub-directories and files is very simple.
+     * Cloning a directory and all of its sub-directories with files is very simple.
      *
      * $zip_pack = new Zip_Pack;
      * $zip_pack
-     *     ->clone_data('foo');
+     *     ->clone_name('foo');
      *
      * You can also add existing individual files and optionally specify a specific
      * destination to place them in your zip package.
      *
      * $zip_pack = new Zip_Pack;
      * $zip_pack
-     *     ->clone_data('bar.txt', 'new_file_name.txt');
+     *     ->clone_name('bar.txt', 'new_file_name.txt');
      *
      * @type string Name of the file or folder to clone into the zip package.
      * @type [string] Include a specific destination to place the cloned data inside
@@ -331,7 +292,7 @@ class Zip_Pack {
      * the new destination still has an extension such as 'new_dir/new_file.txt'.
      * @return self
      */
-    public function clone_data($name, $destination = null) {
+    public function clone_name($name, $destination = null) {
         // If there is a destination, set $loc to it, otherwise $loc is equal to the $name
         $loc = $destination ? $destination : $name;
 
